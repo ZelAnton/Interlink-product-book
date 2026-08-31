@@ -144,5 +144,3 @@ Interlink определяет и объясняет состав. Он не з�
 - [Формирование состава: IPS → Interlink](Versions-and-composition)
 - [Пакет сценариев подбора версий](Version-selection-guide)
 - [Маршруты, нормы и обеспечение](Order-routes-and-norms)
-
-

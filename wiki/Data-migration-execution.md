@@ -185,5 +185,3 @@ flowchart TD
 - [Стратегия миграции IPS](Data-IPS-migration-strategy)
 - [DSL и версии модели](Data-model-language)
 - [Статусы и риски](Data-status-risks-acceptance)
-
-

@@ -135,5 +135,3 @@ flowchart LR
 - [Точный состав передачи](Order-exact-publication)
 - [Производственные ведомости](Order-production-documents)
 - [Доставка модели и границы принимающей системы](Extensibility-and-migration)
-
-

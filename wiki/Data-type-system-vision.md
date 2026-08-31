@@ -127,5 +127,3 @@ Interlink не копирует ни одну систему целиком. Е�
 - [Предметные возможности системы типов](Data-type-system-capabilities)
 - [Физическая материализация](Data-database-materialization)
 - [Расширяемость](Data-extensibility)
-
-

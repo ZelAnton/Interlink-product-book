@@ -156,5 +156,3 @@ Interlink сохраняет привычную функцию:
 - [Назначенная основная версия](Selection-main-version)
 - [Подбор по степени готовности](Selection-maturity)
 - [Просмотр всех версий](Selection-all-versions)
-
-

@@ -132,5 +132,3 @@ DSL не является языком произвольных программ
 - [Возможности системы типов](Data-type-system-capabilities)
 - [Расширяемость и настройка](Data-extensibility)
 - [Миграция базы IPS](Data-IPS-migration-strategy)
-
-

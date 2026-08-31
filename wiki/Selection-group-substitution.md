@@ -202,5 +202,3 @@ Interlink должен сохранить:
 - [Глобальный аналог объекта](Selection-global-analog)
 - [Условия включения позиций и конфигуратор](Selection-position-presence)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

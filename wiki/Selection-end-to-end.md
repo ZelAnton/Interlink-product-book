@@ -284,5 +284,3 @@ Interlink сохраняет путь каждой позиции в соста�
 - [Глобальный аналог](Selection-global-analog)
 - [Допустимые групповые замены](Selection-group-substitution)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

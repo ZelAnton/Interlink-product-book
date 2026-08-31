@@ -171,5 +171,3 @@ Interlink сохраняет ключевые свойства базовой в
 - [Последняя версия](Selection-latest-version)
 - [Подбор по степени готовности](Selection-maturity)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

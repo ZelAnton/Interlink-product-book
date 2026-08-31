@@ -122,6 +122,3 @@ Interlink должен показать не просто итоговый пе�
 - [Сценарии подбора версий](Version-selection-guide)
 - [Позиции заказа и количества](Order-lines-and-quantities)
 - [Точный состав передачи](Order-exact-publication)
-
-
-

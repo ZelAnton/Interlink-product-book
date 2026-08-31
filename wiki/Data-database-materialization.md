@@ -147,5 +147,3 @@ flowchart LR
 - [Расширяемость и настройка](Data-extensibility)
 - [Производительность и агенты](Data-performance-and-agents)
 - [Отличия от IPS](Data-differences-from-IPS)
-
-

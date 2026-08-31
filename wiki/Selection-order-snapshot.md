@@ -206,5 +206,3 @@ flowchart TD
 - [Условия включения позиций и конфигуратор](Selection-position-presence)
 - [Допустимые групповые замены](Selection-group-substitution)
 - [Сквозное формирование многоуровневого состава](Selection-end-to-end)
-
-

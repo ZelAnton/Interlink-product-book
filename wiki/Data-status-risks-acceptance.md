@@ -151,5 +151,3 @@ Interlink можно позиционировать как подтверждё�
 - [Производительность и агентская нагрузка](Data-performance-and-agents)
 - [Выполнение и доказательство переноса](Data-migration-execution)
 - [Сквозные машиностроительные примеры](Data-engineering-examples)
-
-

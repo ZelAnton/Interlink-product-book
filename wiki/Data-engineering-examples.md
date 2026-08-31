@@ -163,5 +163,3 @@ flowchart LR
 - [Расширяемость и настройка](Data-extensibility)
 - [Перенос базы IPS](Data-IPS-migration-strategy)
 - [Развитие цифровых двойников](Data-digital-twins)
-
-

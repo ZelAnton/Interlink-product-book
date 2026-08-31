@@ -149,5 +149,3 @@ Interlink сохраняет:
 - [Последовательное проведение изменений](Selection-sequential-changes)
 - [Резервный выбор](Selection-no-match)
 - [Назначенная основная версия](Selection-main-version)
-
-

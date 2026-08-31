@@ -150,5 +150,3 @@ Interlink уже различает объект и его версии, что 
 - [Основная версия объекта](Selection-main-version)
 - [Последняя допустимая версия](Selection-latest-version)
 - [Жёсткая фиксация точной версии](Selection-exact-fixation)
-
-

@@ -171,5 +171,3 @@ Interlink сохраняет основные свойства контекст�
 - [Временное предпочтение версии](Selection-temporary-preference)
 - [Последовательное проведение изменений](Selection-sequential-changes)
 - [Точный заказ](Selection-order-snapshot)
-
-

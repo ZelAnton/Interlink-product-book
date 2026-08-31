@@ -209,5 +209,3 @@ flowchart TD
 - [Настраиваемое правило](Selection-custom-rule)
 - [Точный состав производственного заказа](Selection-order-snapshot)
 - [Сквозной сценарий](Selection-end-to-end)
-
-

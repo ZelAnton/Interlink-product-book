@@ -131,5 +131,3 @@ stateDiagram-v2
 - [Версии, изменения и снимки](Changes-and-evidence)
 - [Точный состав и публикации заказа](Order-exact-publication)
 - [Перепланирование и отклонения](Order-replanning)
-
-

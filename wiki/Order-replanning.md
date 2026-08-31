@@ -131,5 +131,3 @@ flowchart TD
 - [Жизненный цикл заказа](Order-lifecycle)
 - [Экземпляры и фактический состав](Order-units-lots-as-built)
 - [Сквозные сценарии](Order-end-to-end)
-
-

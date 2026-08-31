@@ -151,5 +151,3 @@ ERP принимает изделие и материалы, но отклоня
 - [Точный состав передачи](Order-exact-publication)
 - [Производственные ведомости и отчёты](Order-production-documents)
 - [Экземпляры и фактический состав](Order-units-lots-as-built)
-
-

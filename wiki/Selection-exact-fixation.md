@@ -167,5 +167,3 @@ Interlink сохраняет все существенные свойства м
 - [Временное предпочтение версии](Selection-temporary-preference)
 - [Применяемость](Selection-effectivity)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

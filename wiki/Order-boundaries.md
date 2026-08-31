@@ -130,5 +130,3 @@ Interlink не вводит универсальный встроенный ти
 - [Позиции и количества заказа](Order-lines-and-quantities)
 - [Жизненный цикл живого заказа](Order-lifecycle)
 - [Точный состав и публикации](Order-exact-publication)
-
-

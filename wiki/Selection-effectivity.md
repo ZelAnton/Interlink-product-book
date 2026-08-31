@@ -179,5 +179,3 @@ Interlink сохраняет все необходимые возможност�
 - [Работа внутри пакета изменения](Selection-change-package)
 - [Конфигуратор](Selection-position-presence)
 - [Точный заказ](Selection-order-snapshot)
-
-

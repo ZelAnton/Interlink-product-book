@@ -138,5 +138,3 @@ Interlink хранит связи, версии, применимость и п�
 - [Формирование производственного заказа](Order-production-composition)
 - [Производственные ведомости и отчёты](Order-production-documents)
 - [MRP и внешние системы](Order-integration)
-
-

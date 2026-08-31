@@ -120,5 +120,3 @@ Neo4j подтверждает удобство объединения типо�
 - [Отраслевые прецеденты и заимствованные практики](Industry-precedents)
 - [Замысел системы типов](Data-type-system-vision)
 - [Статус и риски](Data-status-risks-acceptance)
-
-

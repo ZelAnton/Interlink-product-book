@@ -171,5 +171,3 @@ flowchart LR
 - [Допустимые групповые замены](Selection-group-substitution)
 - [Настраиваемое правило подбора версий](Selection-custom-rule)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

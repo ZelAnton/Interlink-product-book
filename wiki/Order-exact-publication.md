@@ -135,6 +135,3 @@ flowchart TD
 - [Жизненный цикл живого заказа](Order-lifecycle)
 - [Производственные ведомости и отчёты](Order-production-documents)
 - [Интеграция с ERP/MES](Order-integration)
-
-
-

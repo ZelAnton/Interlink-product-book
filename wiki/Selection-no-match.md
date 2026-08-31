@@ -168,5 +168,3 @@ Interlink сохраняет полезную сторону поведения 
 - [Настраиваемое правило подбора](Selection-custom-rule)
 - [Условия включения позиций](Selection-position-presence)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

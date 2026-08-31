@@ -58,4 +58,3 @@ body:
         - Пока не определено
     validations:
       required: true
-

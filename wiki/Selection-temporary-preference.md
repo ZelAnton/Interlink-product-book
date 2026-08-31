@@ -167,5 +167,3 @@ Interlink разделяет ответственность:
 - [Точная фиксация версии](Selection-exact-fixation)
 - [Работа внутри пакета изменения](Selection-change-package)
 - [Применяемость](Selection-effectivity)
-
-

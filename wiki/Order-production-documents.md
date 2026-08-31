@@ -124,5 +124,3 @@ Interlink предоставляет точный состав, версии, п
 - [Точный состав передачи](Order-exact-publication)
 - [Маршруты и нормы](Order-routes-and-norms)
 - [MRP, ERP/MES и длительные операции](Order-integration)
-
-

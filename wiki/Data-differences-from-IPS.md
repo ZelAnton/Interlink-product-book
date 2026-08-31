@@ -114,5 +114,3 @@ IPS различает ссылку на объект и версию отдел
 - [Стратегия миграции IPS](Data-IPS-migration-strategy)
 - [Материализация в БД](Data-database-materialization)
 - [Проверка миграции](Data-migration-execution)
-
-

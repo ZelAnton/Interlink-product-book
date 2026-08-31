@@ -132,6 +132,3 @@ IPS доказал ценность универсальной предметн�
 - [DSL как язык модели](Data-model-language)
 - [Материализация в базе данных](Data-database-materialization)
 - [Цифровые двойники](Data-digital-twins)
-
-
-

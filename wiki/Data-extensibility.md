@@ -119,5 +119,3 @@ flowchart TD
 - [DSL и модули](Data-model-language)
 - [Материализация в БД](Data-database-materialization)
 - [Выполнение миграций](Data-migration-execution)
-
-

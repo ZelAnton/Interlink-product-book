@@ -162,5 +162,3 @@ flowchart TD
 - [Матрица функционального покрытия](Current-state-and-roadmap)
 - [Открытые вопросы и риски](Open-questions)
 - [Сквозные сценарии](Order-end-to-end)
-
-

@@ -98,5 +98,3 @@ Interlink не заявляет, что уже доказал численное
 - [Отраслевые прецеденты](Industry-precedents)
 - [Состояние и дорожная карта](Current-state-and-roadmap)
 - [Как проверяются основания и статусы](Trust-and-sources)
-
-

@@ -143,6 +143,3 @@ Interlink переносит горячую типовую семантику н
 - [Физическая материализация](Data-database-materialization)
 - [Сравнение с IPS](Data-differences-from-IPS)
 - [Цифровые двойники](Data-digital-twins)
-
-
-

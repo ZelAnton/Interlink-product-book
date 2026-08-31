@@ -163,5 +163,3 @@ Interlink обеспечивает согласованный выбор чер�
 - [Работа внутри пакета изменения](Selection-change-package)
 - [Подбор по степени готовности](Selection-maturity)
 - [Настраиваемое правило](Selection-custom-rule)
-
-

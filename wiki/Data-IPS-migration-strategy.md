@@ -175,5 +175,3 @@ IPS остаётся владельцем, Interlink хранит наблюде
 - [Выполнение и доказательство миграции](Data-migration-execution)
 - [Отличия от IPS](Data-differences-from-IPS)
 - [DSL и устойчивые идентификаторы](Data-model-language)
-
-

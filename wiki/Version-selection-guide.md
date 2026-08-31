@@ -144,4 +144,3 @@ flowchart TD
 - [Версии, изменения и снимки](Changes-and-evidence)
 - [Глоссарий](Glossary)
 - [Реестр источников](Trust-and-sources)
-

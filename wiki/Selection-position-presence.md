@@ -196,5 +196,3 @@ Interlink должен различать:
 - [Применяемость по головному изделию, серии и дате](Selection-effectivity)
 - [Допустимые групповые замены](Selection-group-substitution)
 - [Точный состав производственного заказа](Selection-order-snapshot)
-
-

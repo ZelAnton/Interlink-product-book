@@ -134,5 +134,3 @@ Interlink должен предоставить общие идентичнос�
 - [Позиции и количества](Order-lines-and-quantities)
 - [Точный состав передачи](Order-exact-publication)
 - [Перепланирование и отклонения](Order-replanning)
-
-

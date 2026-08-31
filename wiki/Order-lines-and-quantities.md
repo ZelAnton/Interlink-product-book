@@ -121,5 +121,3 @@ flowchart TD
 - [Комплектации и точное изделие](Order-configuration)
 - [Точный состав передачи](Order-exact-publication)
 - [Экземпляры и партии](Order-units-lots-as-built)
-
-
