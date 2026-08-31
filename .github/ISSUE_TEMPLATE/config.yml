@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Открытые продуктовые вопросы
+    url: https://github.com/ZelAnton/Interlink-product-book/wiki/Open-questions
+    about: Выберите тематический вопрос, если хотите дополнить знания об IPS и практике предприятий.
+  - name: Как присоединиться к диалогу
+    url: https://github.com/ZelAnton/Interlink-product-book/wiki/How-to-participate
+    about: Рекомендации по подготовке полезного и безопасного примера.
