@@ -6,6 +6,14 @@
 - [[Продуктовые принципы|Product-principles]]
 - [[Частые вопросы|FAQ]]
 
+### Как это работает
+
+- [[Система на основе Interlink|How-system-works]]
+- [[Инженерное изменение|Change-package-guide]]
+- [[Формирование состава|Selection-user-work]]
+- [[Изменение модели предприятия|Data-model-lifecycle]]
+- [[Заказ до производства|Order-user-operating-model]]
+
 ### Основные изменения
 
 - [[После IPS|From-IPS-to-Interlink]]
@@ -20,6 +28,7 @@
 ### Углублённые материалы
 
 - [[Все сценарии подбора версий|Version-selection-guide]]
+- [[Полный пакет изменения|Change-package-guide]]
 - [[Полный заказный контур|Orders-guide]]
 - [[Система типов и данные|Data-guide]]
 
