@@ -1,0 +1,65 @@
+---
+name: Sync GitHub Wiki
+
+'on':
+  push:
+    branches:
+      - main
+    paths:
+      - wiki/**
+      - .github/workflows/sync-wiki.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-github-wiki
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync wiki directory
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Publish wiki
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          WIKI_REPOSITORY: ${{ github.repository }}.wiki.git
+        run: |
+          set -euo pipefail
+
+          if [[ ! -d wiki ]]; then
+            echo "::error::The wiki source directory does not exist."
+            exit 1
+          fi
+
+          wiki_dir="${RUNNER_TEMP}/wiki-repository"
+          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${WIKI_REPOSITORY}"
+
+          git clone "${wiki_url}" "${wiki_dir}"
+          rsync --archive --delete --exclude='.git/' wiki/ "${wiki_dir}/"
+
+          git -C "${wiki_dir}" add --all
+          git -C "${wiki_dir}" diff --cached --check
+
+          if git -C "${wiki_dir}" diff --cached --quiet; then
+            echo "GitHub Wiki is already synchronized."
+            exit 0
+          fi
+
+          git -C "${wiki_dir}" config user.name "github-actions[bot]"
+          git -C "${wiki_dir}" config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git -C "${wiki_dir}" commit -m "Sync wiki from ${SOURCE_SHA}"
+          git -C "${wiki_dir}" push origin HEAD
