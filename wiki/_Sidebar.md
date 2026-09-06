@@ -2,48 +2,50 @@
 
 - [[Главная|Home]]
 - [[Маршрут знакомства|Start-here]]
+- [[Что изменилось в замысле|Foundation-update]]
 - [[Зачем Interlink|Why-Interlink]]
-- [[Продуктовые принципы|Product-principles]]
+- [[Принципы|Product-principles]]
+- [[После IPS|From-IPS-to-Interlink]]
 - [[Частые вопросы|FAQ]]
 
 ### Как это работает
 
-- [[Система на основе Interlink|How-system-works]]
-- [[Инженерное изменение|Change-package-guide]]
-- [[Формирование состава|Selection-user-work]]
-- [[Изменение модели предприятия|Data-model-lifecycle]]
-- [[Заказ до производства|Order-user-operating-model]]
+- [[Сквозной рабочий путь|How-system-works]]
+- [[Пакет изменения|Change-package-guide]]
+- [[Рабочие области|Workspaces-and-parallel-work]]
+- [[Подбор версий — все сценарии|Version-selection-guide]]
+- [[Мягкая конкретизация|Selection-soft-concretion]]
+- [[Контексты подбора|Selection-contexts]]
+- [[Итерации и возврат|Selection-iterations]]
+- [[Заказы и производство|Orders-guide]]
 
-### Основные изменения
+### Модель и новые данные
 
-- [[После IPS|From-IPS-to-Interlink]]
-- [[Предметный язык модели|Model-language]]
-- [[Объекты и данные|Object-model-and-data]]
-- [[Версии и состав|Versions-and-composition]]
-- [[Изменения и история|Changes-and-evidence]]
-- [[Заказы и производство|Orders-and-production]]
+- [[Общее объектное основание|Object-foundation]]
+- [[Система типов и данных|Data-guide]]
+- [[Язык модели|Model-language]]
 - [[Расширяемость и миграция|Extensibility-and-migration]]
-- [[Отраслевые прецеденты|Industry-precedents]]
-
-### Углублённые материалы
-
-- [[Все сценарии подбора версий|Version-selection-guide]]
-- [[Полный пакет изменения|Change-package-guide]]
-- [[Полный заказный контур|Orders-guide]]
-- [[Система типов и данные|Data-guide]]
+- [[Табличные данные|Tabular-data]]
+- [[Справочные таблицы|Reference-tables]]
+- [[Многомерные таблицы|Multidimensional-tables]]
+- [[Карты соответствий|Coordinate-maps]]
+- [[Допустимые замены|Allowed-replacements]]
+- [[Матрицы совместимости|Compatibility-matrices]]
 
 ### Развитие
 
-- [[Производительность и агенты|Performance-and-agents]]
+- [[Другие отрасли|Multidomain-scenarios]]
+- [[Практики других систем|Industry-precedents]]
+- [[Агенты и прослеживаемость|Agents-and-traceability]]
+- [[Безопасные действия агентов|Agent-safe-actions]]
+- [[Производительность|Performance-and-agents]]
 - [[Цифровые двойники|Digital-twins]]
 - [[Состояние и план|Current-state-and-roadmap]]
 
-### Диалог
+### Диалог и справка
 
 - [[Открытые вопросы|Open-questions]]
+- [[Вопросы о новых таблицах и заменах|Questions-tables-and-compatibility]]
 - [[Как участвовать|How-to-participate]]
-
-### Справка
-
 - [[Словарь|Glossary]]
 - [[Источники и доверие|Trust-and-sources]]

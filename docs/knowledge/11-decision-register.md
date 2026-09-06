@@ -1,230 +1,224 @@
-# 11. Реестр ключевых решений Interlink
+# 11. Реестр решений: продуктовый смысл, цена и проверка
 
-## 1. Назначение реестра
+Редакция от 6 сентября 2026 года. Здесь объясняется, какие обязательства следуют из принятых архитектурных решений Interlink. Реестр не принимает новых решений и не заменяет нормативные документы. Ссылки на источники собраны в [реестре оснований](15-source-register.md); состояние исполнения — в [дорожной карте](02-current-state-and-roadmap.md).
 
-Этот документ переводит технические ADR в продуктовые обязательства: что именно Interlink обещает сохранить, каким способом, какую цену принимает и где решение пока существует только как контракт.
+## 1. Как читать реестр после пересмотра архитектуры
 
-Нормативный источник — [12 — Решения и открытые вопросы](../../12-decisions.md). Здесь ADR не переопределяются. Если краткая формулировка ниже расходится с нормативным текстом, действует ADR. Состояние реализации сверяется отдельно с [02 — Текущее состояние и путь реализации](02-current-state-and-roadmap.md).
+Прежняя редакция описывала только первые 54 решения и местами считала ограничения раннего ядра окончательными. Сейчас журнал Interlink включает решения до ADR-093. Поздние решения не просто добавили возможности: они изменили смысл версии, рабочей области, мягкой конкретизации, жизненного цикла и общего хранилища ссылок.
 
-Дата среза: **31 августа 2026 года**.
+Поэтому старый запрет нескольких рабочих копий или формула «мягкая конкретизация равна временному предпочтению пакета» больше не являются нормой. Их происхождение важно для перехода существующего кода и данных, но нельзя продолжать реализацию по ним только потому, что они уже отражены в тестах раннего прототипа.
 
-### Как читать статус
+Технические обозначения ADR в таблицах оставлены для трассировки. Они не являются пользовательскими именами механизмов. Старые идентификаторы записей этой главы с префиксом KB-D соответствовали тому же номеру ADR; при обсуждении следует использовать предметное название решения.
 
-Все ADR-001…054 приняты как архитектурные решения. Последняя колонка отвечает на другой вопрос — насколько решение исполнено:
+### Статус решения и готовность функции — разные вещи
 
-- **реализовано** — соответствующий compiler/IR/G1/G2-срез присутствует в `main`;
-- **локальная работа** — наблюдается только в незакоммиченном рабочем дереве и ещё не является поставкой;
-- **контракт PoC** — форма и инварианты зафиксированы, исполняемый слой относится к фазам 3–8;
-- **после PoC** — решение принято, но его основная продуктовая функция сознательно не входит в PoC;
-- **смешанный** — части решения имеют разные сроки.
+Принятое решение определяет обязательный смысл будущей реализации. Рабочий компилятор модели доказывает только свой участок. Локальная работа над физической схемой не равна промышленному установщику. Малый исполняемый пример не равен общему механизму для всех пользователей.
 
-Наличие carrier-типа, сигнатуры или теста с `PhaseNotImplementedException` не считается реализацией функции.
+Общая текущая граница такова: существуют язык модели, проверки, формирование типизированных артефактов, сравнение редакций, подготовка плана миграции и каталог модели. Физическая схема активно реализуется. Полное исполнение нового версионного основания, процессов, таблиц, совместимости и агентских гарантий ещё требует согласованного перехода и испытаний.
 
-## 2. Цепочка решений
+## 2. Причинная связь решений
 
-Ключевые решения образуют не независимый список, а причинную цепочку:
+Предприятие сначала получает явное описание типов, связей и ограничений. Оно поставляется согласованной редакцией и материализуется в типизированные структуры хранения. Управляемые операции меняют данные по тому же смыслу, а запросы используют явные условия.
 
-```text
-DSL как источник + module delivery
-  → нормализованный IR и stable identity
-  → type-owned PostgreSQL storage и generated API
-  → один typed command path
-  → Identity / Revision / Occurrence
-  → явный ResolutionContext и объяснимый resolver
-  → полный Snapshot для воспроизводимого результата
-  → host seam для workflow, прав, агентов и tenant control
-```
+Для инженерной работы это основание дополняется версиями, рабочими областями, контекстами и публикациями. Для других областей выбирается подходящий способ изменения записей. Точное свидетельство связывает результат с необходимыми данными и правилами. Принимающее приложение организует полномочия, процедуры, инструменты и внешний обмен.
 
-Если удалить звено, меняется продуктовый смысл последующих решений. Например, Snapshot без exact model/policy provenance становится обычной выгрузкой, а Changeset при наличии второго пути записи перестаёт гарантировать атомарность изменения.
+Если убрать одно звено, меняется обещание остальных. Неизменяемый снимок без сохранённого способа прочитать файл может перестать быть доказательством. Пакет с обходным способом записи не гарантирует согласованность. Идентификатор агента без сведений о показанном контексте не объясняет его решение.
 
-## 3. Реестр ADR-001…ADR-054
+## 3. Основание модели и хранения
 
-### 3.1. Источник модели и физика хранения
-
-| KB ID | Решение и источник | Зачем принято | Последствия и ограничения | Исполнение |
-|---|---|---|---|---|
-| **KB-D-001** | DSL в репозитории — источник sealed-baseline и конверта расширения. [ADR-001](../../12-decisions.md) | Получать reviewable, воспроизводимую модель вместо неконтролируемого изменения production metadata. | `meta` — deployment projection, не второй авторитет; допустимая runtime-дельта обязана быть ограничена и экспортируема в DSL-patch. | DSL/compiler реализованы; DB catalog и export/reconcile — контракт фаз 3/7. |
-| **KB-D-002** | Универсальные таблицы допустимы только для метаданных; EAV не является основной моделью. [ADR-002](../../12-decisions.md) | Перенести доменные инварианты в типизированную физику БД и исключить позднюю проверку «всего из JSON». | Больше таблиц/DDL/generated code; изменение модели требует migration, зато доступны FK, CHECK, NOT NULL и прогнозируемый SQL. | Модель/manifest/codegen реализованы; предметный DDL — фаза 3. |
-| **KB-D-003** | Concrete type явно объявляет write-table mapping. [ADR-003](../../12-decisions.md) | Не позволять конвенции генератора молча изменить физическое отображение. | Авторы модели отвечают за стабильные физические имена; несовпадение — ошибка, а не эвристика. | Валидация/manifest реализованы; DDL — фаза 3. |
-| **KB-D-004** | Наследование: `joined` по умолчанию либо `table-per-hierarchy`; TPC отклонён. [ADR-004](../../12-decisions.md) | Балансировать нормализацию и стоимость полиморфных чтений без дублирования базовых колонок. | Утверждение «каждый concrete type имеет отдельную таблицу» не буквально верно для TPH; joined требует JOIN. | IR/compiler/codegen реализованы; физическая проверка — фаза 3. |
-| **KB-D-005** | Relation — first-class typed record со своей identity, таблицей, атрибутами и аудитом. [ADR-005](../../12-decisions.md) | Сохранить PLM-семантику факта связи и данных места использования. | Reference attribute не заменяет relation, если нужны атрибуты, inverse, traversal, pin или собственная identity. | Метамодель/G1/G2 реализованы; writer/query — фазы 3–6. |
-| **KB-D-006** | Identity отделена от Revision. [ADR-006](../../12-decisions.md) | Развести «что это» и «каково его состояние», не переписывая связи при выпуске новой версии. | Versioned type получает identity/revision storage; атрибуты обязаны иметь scope. | Контракты и generated shapes реализованы; runtime — с фазы 3. |
-| **KB-D-007** | Scope каждого endpoint явен; occurrence — `revision → identity` с optional pin. [ADR-007](../../12-decisions.md) | Делать необходимость подбора версии частью типа связи, а не неявной догадкой запроса. | Identity-target требует `ResolutionContext` только там, где нужна exact revision; revision-target не разрешается повторно. | Метамодель/codegen реализованы; исполняемый resolver — фазы 4–6. |
-| **KB-D-008** | Runtime-расширения хранятся в локальном JSONB-контейнере типа и могут продвигаться в колонку. [ADR-008](../../12-decisions.md) | Сохранить управляемую динамичность IPS без превращения всех основных данных в EAV. | Нет произвольных строковых свойств; promotion требует migration/backfill, детали online-перехода открыты. | Формы IR/G2 реализованы; attach/query/promotion — фаза 7 и далее. |
-
-### 3.2. Generated API, запросы и инфраструктурный профиль PoC
-
-| KB ID | Решение и источник | Зачем принято | Последствия и ограничения | Исполнение |
-|---|---|---|---|---|
-| **KB-D-009** | Descriptor/catalog/query roots — immutable singletons в DI; I/O живёт в scoped session. [ADR-009](../../12-decisions.md) | Не связывать метаданные с сессией и не плодить статические global instances. | Generated registration обязателен; record/descriptor не удерживают connection. | G1 DI/catalog реализованы; query execution — фазы 4–6. |
-| **KB-D-010** | Fluent/named query компилируется через AST → SQL IR; values только parameters. [ADR-010](../../12-decisions.md) | Обеспечить безопасность, анализируемость и единое место оптимизации. | Raw SQL и строковая конкатенация не extension point; `Condition` не `bool`, операторы AND/OR языка C# намеренно недоступны. | AST-контракты есть; полноценный compiler/render — фазы 4–6. |
-| **KB-D-011** | Recursive CTE — базовый traversal; database cursor — явный opt-in streaming contract. [ADR-011](../../12-decisions.md) | Поддержать глубокие структуры без загрузки всего результата в память. | Max depth обязателен; `SEARCH`/`CYCLE`; cursors относятся к G4 и не должны появляться скрыто. | Контракт PoC; G4 — фаза 5/6. |
-| **KB-D-012** | ResolutionContext всегда передаётся явно, результат содержит причину выбора. [ADR-012](../../12-decisions.md) | Устранить session/window-dependent результат и сделать подбор воспроизводимым/объяснимым. | Нельзя иметь невидимый «current context»; cache, trace и agents обязаны включать normalized context. | Carrier-контракт реализован; профили resolver — фазы 4–6 и после PoC. |
-| **KB-D-013** | Единственный диалект PoC — PostgreSQL 18.6 с pinned OCI image; dialect не часть DSL. [ADR-013](../../12-decisions.md) | Сузить эксперимент и проверять точную платформу, сохраняя dialect-neutral algebra/IR. | SQL Server-first и матрица 16/18 отменены; upgrade 18.x — осознанное изменение с повтором contract tests. | Bootstrap реализован; generated DDL/query runtime — фазы 3–6. |
-| **KB-D-014** | Полная мультитенантность вне PoC; schema выбирает доверенный StorageContext. [ADR-014](../../12-decisions.md) | Не раздувать PoC, но не зашить одну схему в public API/cache identity. | Schema-per-tenant — профиль хоста; request-derived schema names недопустимы. | Host seam принят; Alvatune tenant profile — I2/после PoC. |
-| **KB-D-015** | CLI-first codegen; generated C# коммитится и проверяется `generate --check`. [ADR-015](../../12-decisions.md) | Делать изменение generated API видимым в review и не зависеть от Roslyn build magic. | Репозиторий содержит generator output; upgrade CodegenVersion может требовать отдельный diff. Roslyn adapter — только будущий frontend. | G1/G2 реализованы; CLI/check — локальная работа этапа 8, не принятый `main`. |
-| **KB-D-016** | Metadata ownership: sealed default, customizable/extensible только явно; three-way reconcile. [ADR-016](../../12-decisions.md) | Совместить vendor upgrades с customer delta без тихого drift. | Runtime editor не может менять sealed semantics; нужны baseline, patch/export, conflict UX и tombstones. | Ownership в IR реализован; operational reconcile/export — фазы 3/7. |
-| **KB-D-017** | Один UUID является PK identity/revision/relation; UUIDv7 для операций, UUIDv5 для deterministic seed. [ADR-017](../../12-decisions.md) | Убрать двойную бухгалтерию local ID ↔ global ID, характерную для IPS. | Более крупные FK/index keys; бизнес-порядок не выводится из UUID; внешний UUID можно adopt только для публичной identity/relation/tuple, не revision. | Типы/генерация ID-контракта реализованы; DB/writer и измерения — фазы 3/8. |
-| **KB-D-018** | Конкурентность — `row_version bigint` и CAS. [ADR-018](../../12-decisions.md) | Обнаруживать потерянные обновления без скрытой долгой DB-блокировки. | IPS-style checkout может быть отдельным UX поверх, но не альтернативным write path. | RowVersion в generated DTO реализован; CAS writer — фаза 3. |
-| **KB-D-019** | Current хранится как `is_current` на revision с partial unique index. [ADR-019](../../12-decisions.md) | Избежать циклической FK identity ↔ revision и удерживать единственность в БД. | Current-read платит JOIN; решение пересматривается только по benchmark. | Контракт DDL/runtime — фазы 3–4. |
-| **KB-D-020** | Все DB names — `snake_case`, всегда schema-qualified, без `search_path`. [ADR-020](../../12-decisions.md) | Сделать SQL детерминированным и исключить подмену объекта через окружение сессии. | Manifest/StorageContext обязаны дать полное имя; ручной SQL не поддерживается. | Naming/manifest реализованы; enforcement DDL/query — фазы 3–6. |
-| **KB-D-021** | Pin revision обязан принадлежать target identity; это composite FK. [ADR-021](../../12-decisions.md) | Не позволить «точной конкретизации» выбрать версию другого объекта. | Каждая pinnable occurrence-table несёт составной ключ; pin сильнее остальных слоёв resolver. | Contract/G2 реализованы; FK writer — фаза 3, resolver — фаза 5. |
-| **KB-D-022** | Бизнес-логика не живёт в triggers; ACL/topology profile закрывает обход runtime-роли fail-closed. [ADR-022](../../12-decisions.md) | Сохранить один язык поведения и не позволить обычной runtime-role обходить command invariants. | БД хранит declarative guards; owner/DBA остаются trusted boundary. ACL drift, unsafe routine/trigger/inheritance closure блокируют deployment. | Детальный контракт; emitter/smoke — фаза 3. |
-| **KB-D-023** | Named queries AOT-компилируются в приложение; stored procedures не являются механизмом ядра. [ADR-023](../../12-decisions.md) | Не заводить второй язык правил и второй versioning/deployment path. | Узкая будущая калитка только для generated, hashed model-owned SQL functions по измеренной необходимости. | Контракт; G3/G4 — фазы 4–6. |
-| **KB-D-024** | Result cache — только explicit opt-in, с compiler-built dependency vector и write fence. [ADR-024](../../12-decisions.md) | Не допустить скрытой устарелости инженерного ответа после записи. | `Immutable` — default-deny; `projection` не immutable; multi-node требует durable transactional token/version registry. | Контракт PoC; in-process validation — фазы 4/8, multi-node после PoC. |
-| **KB-D-025** | Полная стабильная структура загружается из materialized Snapshot, не через clustering базовых таблиц. [ADR-025](../../12-decisions.md) | Получить последовательное range-read и воспроизводимость контекстно выбранного DAG. | Только full snapshot-safe outgoing occurrence graph; arbitrary filter/prune/access запрещены; `baseline`/`order` append-only, `projection` rebuildable. | Carrier/physical contract; `projection` — фаза 8, business kinds — после PoC. |
-
-### 3.3. Расширяемая метамодель и единый versioning path
-
-| KB ID | Решение и источник | Зачем принято | Последствия и ограничения | Исполнение |
-|---|---|---|---|---|
-| **KB-D-026** | Attachment modes ортогональны ownership: `static`, `on-demand`, `open`. [ADR-026](../../12-decisions.md) | Различить обязательную форму типа и прикрепляемые свойства, не отказываясь от typed definitions. | Три состояния on-demand; open разрешает только определения из pool; значения остаются типизированными. | IR/G2 формы реализованы; runtime attach/query — фаза 7. |
-| **KB-D-027** | Runtime attribute — полноценный AttributeDefinition в общем catalog с `cust.` namespace. [ADR-027](../../12-decisions.md) | Не создавать параллельную «вселенную дополнительных полей». | JSONB reference не имеет FK и проверяется command layer; promotion — штатная migration. | Contract; catalog/runtime — фаза 7. |
-| **KB-D-028** | TupleType — nonversioned объект со структурной identity и typed slots. [ADR-028](../../12-decisions.md) | Моделировать контекстные комбинации вроде Part-at-Plant без искусственного versioned объекта. | `UNIQUE NULLS NOT DISTINCT`, typed get-or-create; tuple не заменяет occurrence и relation. | IR/G1/G2 реализованы; DDL/writer — фаза 3. |
-| **KB-D-029** | Пятнадцать IPS-механизмов сводятся к восьми концептам и одному write path: Identity, Revision, Draft, Changeset, Maturity, Pin, Effectivity, ResolutionContext+Snapshot. [ADR-029](../../12-decisions.md) | Сохранить функции версий/изменений, устранив пересекающиеся сущности и неоднозначный порядок. | Fixed revision immutable; один exclusive affected-object lock; resolver order `snapshot → pin → changeset → effectivity → policy`; process state не Maturity. | Carriers/G1/G2 частично реализованы; single-revision PoC — фазы 3–6; full Changeset/Effectivity — после PoC. |
-| **KB-D-030** | Instance navigation — explicit awaited methods; transparent lazy properties отклонены. [ADR-030](../../12-decisions.md) | Сделать I/O, session и ResolutionContext видимыми и избежать N+1/sync-over-async. | Lazy допускается только как AST до execute, async streaming, guarded memo и explicit resolve. | Generated method shapes частично реализованы; execution — фазы 4–6. |
-| **KB-D-031** | DSL может seed system instances с deterministic UUID; seed идёт через тот же command path и имеет protection levels. [ADR-031](../../12-decisions.md) | Воспроизводимо поставлять справочники/системные объекты без второго DML-механизма. | ModelId неизменяем; versioned seed имеет одну revision; tombstone не даёт resurrect customer deletion. | Parse/IR/WellKnown реализованы; DB seed/reconcile — фазы 3/7. |
-| **KB-D-032** | Computed attributes ограничены deterministic language; Caption обязателен; machine Name отделён от Label; icons — resource keys. [ADR-032](../../12-decisions.md) | Дать типизированное представление и UI metadata, не затаскивая forms/layout/произвольный код в DSL. | Stored computed ограничен одной таблицей; projected живёт в view; icon не binary asset. | Compiler/codegen формы реализованы; DB/view runtime — фаза 3+. |
-| **KB-D-033** | Module order явен; model releases образуют chain; code migrations — reviewed offline steps. [ADR-033](../../12-decisions.md) | Сделать composition и data transition детерминированными и возобновляемыми. | Любой semantic IR diff требует model version bump; destructive change обязан сохранить fixed history/readers; rolling migration пока не обещана. | Composition/version checks реализованы; migration journal/steps — фаза 3; online — открыто. |
-| **KB-D-034** | Traversal может объединять relation types; семантика `FilterEdge`, `FilterTarget`, `PruneWhen` различна. [ADR-034](../../12-decisions.md) | Корректно работать с неоднородным PLM-графом без скрытого Current для identity-only edges. | Нужен общий identity ancestor; revision enrichment nullable; multi-relation traversal — stretch. | Контракт G4; базовый срез — фаза 5, расширение позже. |
-| **KB-D-035** | C# attributes как канонический источник модели отклонены; normalized IR frontend-neutral. [ADR-035](../../12-decisions.md) | Сохранить model-as-data, deterministic hash, seed, patches и будущий editor без Roslyn dependency. | C# builder остаётся test frontend; возможный Roslyn adapter не меняет канон и pipeline. | Реализовано в compiler architecture. |
-| **KB-D-036** | Host-neutral seam: standalone/enlisted transaction, trusted StorageContext, ActorContext, CommitPermit. [ADR-036](../../12-decisions.md) | Встраивать object change, host audit/outbox и approval в одну атомарную операцию без зависимости Interlink → Alvatune. | Host owns outer commit/authorization; missing transaction notification leaves safe cache bypass; permit сверяется с exact hash. | Contracts/carriers приняты; runtime — фаза 3 и последующие; Alvatune integration — I0/I1. |
-| **KB-D-037** | Types референсируемы как data через read-only metatype facet/`typeref`; полная метацикличность отклонена. [ADR-037](../../12-decisions.md) | Позволить ссылаться на definition и строить relations instance↔type, не редактируя schema через object API. | `meta.definition` — FK anchor; model semantics меняются только DSL/migration. | Contract PoC; registry/typeref DB — фаза 3, расширенные facets по потребности. |
-| **KB-D-038** | Reference attribute имеет identity/revision scope; ordered lists — per-type many-table; relation boundary явна. [ADR-038](../../12-decisions.md) | Достичь IPS-паритета ссылок без превращения каждого указателя в relation. | Reference без собственных attributes/inverse/traversal; списки atomically replace; JSONB references без FK. | IR/G2 реализованы; DDL/query/writer — фазы 3–4. |
-| **KB-D-039** | Tags — identity-only hierarchical pool; revision tags и tag-as-status/classification отклонены. [ADR-039](../../12-decisions.md) | Дать cross-cutting findability, не создавать теневую lifecycle/property system. | Assignment tables per taggable type; один tag assignment не несёт domain attributes. | Contract/G2 частично реализованы; writer/query — фазы 3–4. |
-| **KB-D-040** | Classification — композиция class hierarchy + общего attribute pool + on-demand attachment, не отдельный xProperty universe. [ADR-040](../../12-decisions.md) | Сохранить PLM-классификаторы с едиными типами/валидацией и без дублирования метамодели Aras. | Один class на scheme, assignment на identity; в PoC не входит, нужен только glue Classify/Reclassify после проверки primitives. | После PoC. |
-| **KB-D-041** | Перед freeze закреплены: одна DSL maturity scale, typed constraints, per-type writer facades, technical recursion anchor. [ADR-041](../../12-decisions.md) | Не допустить, чтобы PoC «доказал» только read-only carriers без единого способа записи и DB guards. | Нет generic EngineeringCommands/JSON; validators/CHECK/catalog должны происходить из одного constraint node; snapshot command до фазы 8 не исполняется. | Scale/constraints/signatures/codegen реализованы; writer — фаза 3, snapshot — фаза 8. |
-| **KB-D-042** | Из IPS заимствуются явный Fallback, wildcard effectivity и file hashes в ContentHash; runtime selection-rule objects не заимствуются. [ADR-042](../../12-decisions.md) | Сохранить полезный outcome «не совсем подходящая» и исправить известные слабости IPS. | Без явного fallback остаётся `NoMatch`; конкретное head сильнее wildcard; file content входит в approval hash после появления vault. | Fallback carrier-контракт после PoC; policies — фаза 6; Effectivity/vault — после PoC. |
-
-### 3.4. Закрытие развилок и заморозка публичных контрактов
-
-| KB ID | Решение и источник | Зачем принято | Последствия и ограничения | Исполнение |
-|---|---|---|---|---|
-| **KB-D-043** | Границы метамодели закрыты conservatively: relation reification и anonymous tuple values отклонены; localization, pools и evolution имеют объявленный envelope. [ADR-043](../../12-decisions.md) | Не раздувать generic metamodel до появления доказанного сценария и сохранить один каталог definitions. | Unsupported generalization должна fail-closed; пересмотр — отдельный ADR и migration. Точные runtime pool operations фазируются. | Часть compiler rules реализована; operational extensibility — фаза 7/после PoC. |
-| **KB-D-044** | Exclusive draft сохраняется с explicit preemption; named resolver policies компилируются; withdrawal необратим обычной promotion; projection имеет отдельный lifecycle. [ADR-044](../../12-decisions.md) | Закрыть concurrency и version-selection semantics без ветвления/merge и скрытых rule objects. | Preempt abandons весь Changeset с actor/reason; `projection` не бизнес-свидетельство и rebuild получает новый ID. | Policy/reason срез — фаза 6; projection — фаза 8; Changeset/preemption — после PoC. |
-| **KB-D-045** | Единственная query surface — descriptor algebra; LINQ отвергнут; multi-step named query и test/explain tooling определены ядром. [ADR-045](../../12-decisions.md) | Сделать ResolutionContext обязательным типово и позволить compiler выбирать CTE/materialization. | Нельзя подмешать arbitrary SQL; generated API и plan tests становятся частью compatibility surface. | Контракт; G3/G4/tooling — фазы 4–6 и далее. |
-| **KB-D-046** | Authorization всегда принадлежит host; Interlink применяет host predicates и проверяет CommitPermit hash. [ADR-046](../../12-decisions.md) | Не создавать конфликтующую вторую модель прав и не путать approval artifact с полномочием. | AccessFingerprint входит во все caches; permit opaque provenance не даёт право сам по себе; snapshot authorization — whole artifact. | Host seam принят; execution — фазы 3+ и Alvatune I1. |
-| **KB-D-047** | Relation phrase/inverse-phrase обязательны; определения получают product-facing texts/cardinality/no-manual-create. [ADR-047](../../12-decisions.md) | Строить понятные предложения и UI/validation contracts из модели, а не угадывать грамматику по technical name. | `label` не заменяет predicate phrase; cardinality и manual-create flag не означают готовый UI. | Compiler/G1/G2 реализованы; enforcement/runtime — по фазам 3–4. |
-| **KB-D-048** | Normalized IR описывает model shape; seeds вынесены; grammar/diagnostics/canonical expressions versioned и fail-closed. [ADR-048](../../12-decisions.md) | Стабилизировать hash и diagnostic contract до реализации lexer/parser. | Seed value change не bump-ит model version; named query меняет shape/hash; invalid compile не пишет partial output. | Реализовано в phase 1 compiler. |
-| **KB-D-049** | Identity errors не позволяют построить MetamodelSnapshot. [ADR-049](../../12-decisions.md) | Не выполнять semantic validation над неоднозначным stable ID/name graph. | Ошибки identity short-circuit snapshot/IR; diagnostics формы не обещаются для неоднозначной модели. | Реализовано. |
-| **KB-D-050** | Каждое occurrence имеет immutable `occurrence_thread_id`, переживающий revisions позиции. [ADR-050](../../12-decisions.md) | Сравнивать структуру и привязывать внешний факт к тому же месту, а не к target/position number. | Thread уникальна в source revision и копируется при draft/content copy; новое место получает новую thread; одной thread недостаточно для global path address. | IR/G2 carrier реализован; registry/FK/writer — фаза 3; diff use — фаза 5+. |
-| **KB-D-051** | Digital-twin foundation вводится объявленными axis/historized/signal contracts, но instance twin остаётся отдельным потребителем. [ADR-051](../../12-decisions.md) | Не закрыть архитектуру для as-designed/as-built/as-maintained, не расширяя текущий PoC. | Coordinates — model-declared canonical map; Unit/Lot/signals и bitemporal execution — post-PoC tracks, не скрытая функция ядра сегодня. | Carrier contracts частично реализованы; основная функция после PoC. |
-| **KB-D-052** | Configuration contracts заморожены: threadref carve-out, три snapshot forms, Order как enterprise model, configurator contract, ThreadPath address, versioned language. [ADR-052](../../12-decisions.md) | Не выпустить G2 API, непригодный для заказов, вариантов и reused subassemblies. | Live address — `(StructureDefinitionId, ExactRootRevisionId, ThreadPath)`; Order не core primitive и может иметь много handoff snapshots; OC-A/OC-B не входят в PoC. | Carriers/codegen частично реализованы; registry — фаза 3; configuration/order/diff — после PoC. |
-| **KB-D-053** | Versioned module — delivery unit с prefix/requires/namespace/manifest membership; host pins versions, core только validates. [ADR-053](../../12-decisions.md) | Независимо поставлять domain modules и избегать collision `Task`/`task` без schema-per-module. | `requires` — minimum within MAJOR; нет resolver в core; stable IDs принадлежат prefix; model сохраняет одну migration chain. | Phase 1.6 compiler/manifest и G1/G2 namespaces реализованы; `meta.module`/deployment — фаза 3. |
-| **KB-D-054** | Definition names case-insensitive в generation scope; inherited attached binding хранится в declaring-type container; оставшиеся compiler decisions назначены фазам. [ADR-054](../../12-decisions.md) | Не получать CLS/Windows collisions и не переносить данные при появлении joined descendant. | `Root`/`root` — ошибка; descendant container хранит только собственные bindings; некоторые literal/query checks сознательно ждут first consumer phase. | Case/name и relevant G2 rules реализованы; назначенные query/DDL checks — фазы 3–7. |
-
-## 4. Решения, наиболее важные для разговора с IPS
-
-Из 54 ADR продуктовый разговор обычно упирается в десять обязательств:
-
-| Обязательство | Решения | Что меняется относительно IPS |
+| Решение | Продуктовый смысл и принятая цена | Основание |
 |---|---|---|
-| Состав сохраняет асимметрию `revision parent → identity child` | KB-D-005…007 | Базовая инженерная физика IPS сохранена. |
-| Подбор всегда имеет explicit context и reason | KB-D-012, 029, 042, 044 | Нет ambient context окна и молчаливого fallback. |
-| Hard concretion становится Pin с DB-инвариантом | KB-D-021, 029 | Exact choice проверяем и сильнее policy. |
-| Editing context/soft concretion становятся Changeset overlay | KB-D-029, 036, 044 | Один путь изменения вместо пересекающихся session mechanisms. |
-| Applicability становится typed Effectivity над axes | KB-D-029, 042, 051 | Строковые диапазоны IPS заменяются нормализованными range assertions. |
-| Position получает identity между revisions | KB-D-050, 052 | Сопоставление не зависит от target, номера или sort order. |
-| Точная конфигурация публикуется full Snapshot | KB-D-025, 044, 052 | История не пересчитывается по текущим rules/context. |
-| Metadata компилируется, customer delta ограничена | KB-D-001, 016, 026, 027 | Свободная runtime-метамодель заменяется тремя управляемыми скоростями изменения. |
-| Все записи идут через typed commands | KB-D-022, 031, 036, 041 | Нет scripts/triggers/procedures как параллельного языка бизнес-правил. |
-| Workflow, access, UI и agents принадлежат host | KB-D-036, 046, 051, 052 | Interlink остаётся object/version kernel, а не монолитной PLM-системой. |
+| Основная модель имеет проверяемый источник | Структура предприятия переносится между средами как согласованная редакция. Рабочая база не становится вторым бесконтрольным редактором основной модели. | ADR-001 |
+| Основные данные не хранятся как универсальные произвольные свойства | Известные типы получают типизированное хранение и ограничения. Общий реестр структурных опор допускается поздним уточнением и не отменяет этот принцип. | ADR-002, уточнение ADR-068 |
+| Отображение типа в хранение задаётся явно | Изменение имени или поставки не должно незаметно перенести данные в другое место. Цена — дисциплина описания и миграции. | ADR-003 |
+| Наследование имеет объявленную стратегию | Несколько типов могут разделять таблицу или использовать несколько связанных таблиц. Лозунг «ровно одна таблица на каждый тип» не является общим правилом. | ADR-004 |
+| Связь — самостоятельный типизированный факт | Количество, срок допуска и другие свойства отношения не теряются внутри простой ссылки. Не всякая ссылка обязана становиться такой связью. | ADR-005 |
+| Объект отделён от содержания | Смена версии не создаёт новый несвязанный предмет. Позднее инженерная версия дополнительно отделена от её точного состояния. | ADR-006, уточнение ADR-063 |
+| Степень точности ссылки объявляется явно | Ссылка на объект, инженерную версию и точное содержание не смешиваются. Подбор выполняется только там, где действительно требуется выбор. | ADR-007, уточнение ADR-063 |
+| Дополнительные признаки управляемы | Редкий типизированный признак может добавляться в разрешённой области, а затем войти в основную модель через миграцию. Гибкость не означает любые непроверяемые свойства. | ADR-008 |
 
-## 5. Отвергнутые и заменённые альтернативы
+Для продуктового специалиста главный результат этих решений — возможность развивать модель без потери смысла и переносимости. Физические детали остаются в технических источниках; здесь важны проверяемые ограничения, скорость доступа и цена сопровождения.
 
-### 5.1. Отвергнуты как целевая архитектура
+## 4. Чтение, поставка и защита согласованности
 
-| Альтернатива | Почему отвергнута | Действующая замена |
+| Решение | Продуктовый смысл и принятая цена | Основание |
 |---|---|---|
-| Универсальная instance-table/EAV | Слабые FK/типы, дорогие запросы, поздняя проверка. | Type-owned storage + generated schema (KB-D-002…004). |
-| Table-per-concrete-type | Дублирование базовых колонок и тяжёлый polymorphic union. | Joined или TPH (KB-D-004). |
-| Скрытый current/editing context | Разный ответ между окнами/background jobs; невидимый cache input. | Explicit ResolutionContext (KB-D-012). |
-| Пара local bigint + global UUID | Двойные indexes и постоянная translation/ошибки identity. | Один UUID PK (KB-D-017). |
-| `identity.current_revision_id` | Циклическая FK identity↔revision. | `revision.is_current` + partial unique (KB-D-019). |
-| Business logic в triggers/Methods/stored procedures | Второй язык и путь version/deployment/write. | Typed commands + compiled query algebra (KB-D-022/023). |
-| Automatic result cache | Скрытая stale engineering data. | Explicit opt-in + dependency vector/fence (KB-D-024). |
-| CLUSTER marker на базовых rows состава | DAG и context-dependent expansion не имеют одного физического порядка. | Materialized Snapshot rows (KB-D-025). |
-| Transparent lazy-loading properties | Hidden I/O, N+1, lost ResolutionContext. | Awaited navigation/async streaming (KB-D-030). |
-| C# attributes как source of truth | Не выражают model-as-data, seed и deterministic semantic normalization. | DSL → normalized IR; adapters могут быть дополнительными (KB-D-035). |
-| Полная метацикличность «тип есть редактируемый Item» | Schema drift и два versioning mechanisms типов. | Read-only metatype facet + typeref (KB-D-037). |
-| Revision tags или tag-as-classification | Теневая шкала состояния/параллельные свойства. | Identity tags; Maturity; отдельная classification composition (KB-D-039/040). |
-| Отдельный xProperty universe | Дублирует definitions/domain/validation. | Общий AttributeDefinition pool (KB-D-040). |
-| Relation reification и anonymous tuple value | Неясные cascades/version semantics и невыразимый domain. | Attributes на relation либо named TupleType (KB-D-028/043). |
-| Runtime-interpreted selection rule objects | Снова несколько языков правил и mutable per-window behaviour. | Compiled named policies + explicit fallback (KB-D-042/044). |
-| Changeset queue или branch+automatic merge | Для инженерного состава нет безопасной общей merge semantics. | Exclusive draft + explicit audited preemption (KB-D-044). |
-| LINQ как основная query surface | Нельзя типово обязать ResolutionContext; ошибки дают правдоподобный неверный ответ. | Descriptor algebra (KB-D-045). |
-| Собственная модель прав Interlink | Конфликт с host authorization и двойной источник истины. | Host predicates + AccessFingerprint (KB-D-046). |
-| Schema-per-module, per-module migration chains, dependency solver в core | Конфликт с tenant schemas; два порядка migrations; package-management не domain kernel. | Prefix/namespace, одна model chain, host-pinned module set (KB-D-053). |
+| Описание модели не зависит от текущего сеанса | Открытие нового окна не создаёт иной смысл типов или связей. Сведения о модели отделены от выполнения операций. | ADR-009 |
+| Запросы используют один проверяемый язык | Форма, отчёт и агент не должны независимо трактовать одинаковое условие. Произвольный запрос к базе не является пользовательским расширением ядра. | ADR-010 |
+| Глубокая структура читается управляемо | Большой состав можно получать без бесконтрольной загрузки целиком. Глубина, циклы и неполнота имеют явные правила. | ADR-011 |
+| Условия подбора и основания результата явны | Окно, фоновое задание и агент получают согласованный смысл при одинаковых входах и данных. Живой результат не становится неизменяемым сам по себе. | ADR-012 |
+| Опытное доказательство использует определённую платформу базы | Проверяется воспроизводимая среда, а не произвольное сочетание технологий. Поддержка иных платформ требует отдельного обоснования. | ADR-013 |
+| Изоляция предприятий не зашивается скрыто в модель | Хранилище и область доступа задаются доверенным способом. Полная промышленная многопользовательская изоляция принимается отдельно. | ADR-014 |
+| Производные артефакты модели проверяемы | Изменение должно быть видимо и воспроизводимо. Совпадение исходного текста без совпадения средств формирования ещё не доказывает одинаковый выпуск. | ADR-015 |
+| Поставщик и предприятие имеют разные области владения | Обновление не уничтожает настройку молча; разрешённые изменения и конфликты сравниваются с исходной редакцией. | ADR-016 |
+| Идентичность переносима | Объект узнаётся при обмене и миграции независимо от локального порядкового номера. Бизнес-порядок не выводится из технического ключа. | ADR-017 |
+| Потерянное обновление обнаруживается | Если исходное содержание изменил другой участник, поздняя операция не перетирает результат. Эксклюзивное взятие в работу возможно как дополнительная процедура. | ADR-018 |
+| Основная версия назначается явно | Она не обязана быть последней. Прежняя физическая форма назначения пересмотрена: в новой модели назначается инженерная версия в определённой области. | ADR-019, уточнение ADR-067 |
+| Место хранения не выбирается случайным окружением | Одинаковая операция не должна обращаться к иной области из-за настройки сеанса. Это инфраструктурная гарантия, а не обязанность пользователя. | ADR-020 |
+| Точная ссылка принадлежит ожидаемому объекту | Нельзя конкретизировать подшипник состоянием другого изделия. Новая форма дополнительно проверяет принадлежность инженерной версии и тип цели. | ADR-021, уточнение ADR-063/068 |
+| Нет обходного языка предметного изменения | Бизнес-правила не распределяются между независимыми скрытыми обработчиками базы. Защита от обхода проверяется при установке; её план не означает уже исправленный код. | ADR-022 |
+| Корпоративные запросы поставляются согласованно | Правило не превращается в отдельную неучтённую программу внутри базы. Специальное ускорение допускается только как управляемое расширение при доказанной необходимости. | ADR-023 |
+| Ускорение не скрывает устаревшие данные | Сохранённый результат запроса используется по явному договору актуальности и зависимостей. Кэш не является историческим доказательством. | ADR-024 |
+| Точный состав можно материализовать отдельно | Полный зафиксированный граф читается без повторного подбора. Ускоряющая проекция и доказательная публикация имеют разные сроки и правила хранения. | ADR-025 |
 
-### 5.2. Пересмотрены или отложены, но не отвергнуты навсегда
+Эти решения создают предпосылки для высокой нагрузки, но не доказывают превосходство над IPS. Приёмка сравнивает одинаковые предметные задачи с одинаковой строгостью, правами, историей и объёмом данных.
 
-- SQL Server-first заменён PostgreSQL 18.6 для PoC; dialect-neutral IR сохраняет возможность другого renderer при отдельном обосновании (KB-D-013).
-- Source generator перестал быть PoC-gate; Roslyn adapter остаётся допустимым дополнительным frontend (KB-D-015/035).
-- Schema-per-tenant не входит в PoC, но является целевым host profile Alvatune (KB-D-014).
-- Pessimistic checkout может появиться как UX поверх CAS/Changeset, но не как второй writer (KB-D-018).
-- Generated SQL functions допустимы только после измеренного случая; arbitrary stored procedures не возвращаются (KB-D-023).
-- Polymorphic endpoint registry, compact combined storage, online migrations и multi-node cache registry остаются открытыми измеримыми развилками, а не скрытыми roadmap promises.
+## 5. Настройки, работа и семантика инженерных данных
 
-## 6. Расхождения и устаревшие формулировки источников
+| Решение | Продуктовый смысл и принятая цена | Основание |
+|---|---|---|
+| Способ добавления признака отличается от права менять его определение | Обязательное поле типа, выборочно прикрепляемый признак и разрешённое расширение имеют разные случаи применения. | ADR-026 |
+| Дополнительный признак остаётся полноценным определением | Он имеет тип, область и правила; нет второй несогласованной системы «свободных полей». | ADR-027 |
+| Контекстная комбинация может быть самостоятельной записью | Для «деталь на площадке» сохраняются общие нормы без искусственной инженерной версии детали на каждую площадку. | ADR-028 |
+| Инженерное изменение имеет общий управляемый путь | Сохраняется принцип единого изменения, но раннее сокращение до восьми понятий заменено полноценной моделью версий, работы и конкретизации. | ADR-029, пересмотр ADR-063–070 |
+| Обращение к связанным данным выполняется явно | Просмотр карточки не запускает незаметную цепь непредсказуемых чтений. Пакетное и потоковое получение можно контролировать. | ADR-030 |
+| Начальные справочники поставляются воспроизводимо | Повтор установки не создаёт дубликаты и не восстанавливает удалённое предприятием вопреки согласованной настройке. | ADR-031 |
+| Вычисляемые значения и наименования имеют проверяемый смысл | Формулы ограничены объявленной моделью; подписи и обозначения не подменяются техническими именами. | ADR-032 |
+| Изменения модели образуют управляемую цепочку | Переход проверяется и фиксируется. Обновление без остановки не является текущим универсальным обещанием. | ADR-033 |
+| Отбор связи, цели и продолжения обхода различается | Фильтр отображения не должен незаметно менять смысл структуры или воскрешать историческое вхождение. | ADR-034 |
+| Модель не определяется произвольным прикладным кодом | Можно развивать редакторы и средства описания, сохраняя единый проверенный смысл и поставку. | ADR-035 |
+| Ядро встраивается в процедуру принимающего продукта | Предметное изменение и обязательные внешние свидетельства могут фиксироваться согласованно. Процедура и полномочия не дублируются внутри ядра. | ADR-036 |
+| На тип можно ссылаться как на определение | Пользовательские данные могут быть связаны с типом, но это не разрешает редактировать основную схему обычной карточкой. | ADR-037 |
+| Ссылка в поле и самостоятельное отношение не смешиваются | Выбор формы зависит от наличия собственных свойств, истории и навигационного смысла. Упорядоченный список сохраняется согласованно. | ADR-038 |
+| Теги помогают находить объекты | Поисковая отметка не превращается в скрытую степень готовности или допуск. | ADR-039 |
+| Классификация использует общие характеристики | Классы, области и дополнительные признаки согласуются с единой системой типов. Полный классификационный процесс принимается предметно. | ADR-040 |
+| Проверяются не только формы чтения, но и безопасная запись | Ограничения значений должны одинаково действовать при подготовке модели и изменении данных. | ADR-041 |
+| Полезный резерв IPS сохраняется явно | «Не совсем подходящая» версия сопровождается предупреждением; применяемость и файловые основания не теряются. | ADR-042 |
+| Обобщение модели ограничено доказанным смыслом | Не вводятся универсальные конструкции, для которых не определены изменение, история и удаление. Расширение требует собственного договора. | ADR-043 |
+| Правила подбора и жизнь проекций управляемы | Именованное правило имеет редакцию, проекция — отдельную актуальность. Прежняя универсальная эксклюзивность рабочей копии позднее отменена. | ADR-044, пересмотр ADR-064 |
+| Средства сложного запроса не создают второй смысл | Несколько шагов поиска могут исполняться разными способами, сохраняя условия и объяснение. | ADR-045 |
+| Полномочия определяет принимающий продукт | Само свидетельство согласования не выдаёт прав; ядро проверяет точный предмет и применяет установленный договор доступа. | ADR-046 |
 
-Здесь зафиксированы не «ошибки, которые можно мысленно исправить», а места, где читатель обязан применить приоритет источников.
+Здесь особенно важно не читать старую строку реестра отдельно от позднего пересмотра. Например, поддержка управляемой публикации сохранена, а запрет независимой работы над одной инженерной версией — нет.
 
-### KBD-C-001. README отстаёт от локальной фазы 2
+## 6. Читаемость модели, конфигурации и исходные расширения
 
-[README](../../../README.md) всё ещё описывает `Interlink.CodeGen` как каркас, а `interlink generate` и CI regeneration check — как будущую работу. Текущее рабочее дерево содержит реализацию этапа 8, но она не закоммичена. Поэтому:
+| Решение | Продуктовый смысл и принятая цена | Основание |
+|---|---|---|
+| Связь имеет понятное прямое и обратное название | Пользователь читает «документ описывает деталь», а не расшифровывает техническое поле. Эти сведения помогают приложению, но не создают готовый интерфейс автоматически. | ADR-047 |
+| Смысл модели и начальные данные различаются | Изменение справочного значения не должно без причины становиться изменением структуры модели. Ошибочная подготовка не публикует половину результата. | ADR-048 |
+| Неоднозначная идентичность модели блокирует продолжение | Нельзя строить согласованную систему, если два определения ошибочно считаются одним или наоборот. | ADR-049 |
+| Позиция сохраняет тождество между состояниями состава | Сопоставление не зависит только от номера, компонента или порядка строки. Полный путь использования задаётся дополнительно. | ADR-050 |
+| Для двойника заранее оставляется предметное основание | Проект, экземпляр, факт монтажа и эксплуатационное событие различаются. Полная телеметрия и физическое моделирование остаются отдельными задачами. | ADR-051, развитие ADR-079 |
+| Конфигурация и точный заказ имеют явный договор | Заказ может иметь несколько передач. Опции, позиции и пути не выводятся из интерфейса. Поздние решения уточняют уровни точности и область свидетельств. | ADR-052 |
+| Модули поставляются согласованным составом | Их версии и зависимости проверяются вместе. Выбор набора поставки не является скрытой функцией предметного ядра. | ADR-053 |
+| Имена и унаследованные признаки не создают неоднозначность | Различия только в регистре и смена места унаследованного признака не должны приводить к незаметной потере данных. | ADR-054 |
 
-- README устарел относительно локальной работы;
-- локальная работа не позволяет переписать историю `main` как «этап 8 принят»;
-- нормативная продуктовая формулировка: G1/G2 в `main` реализованы до этапа 7, этап 8 — local WIP, final phase-2 acceptance открыта.
+## 7. Перенос, заказ и первые исправления полноты
 
-### KBD-C-002. «Собственная таблица каждого concrete type» — слишком сильный лозунг
+| Решение | Продуктовое обязательство и проверка | Основание |
+|---|---|---|
+| Перенос IPS возобновляем и доказуем | Есть точный исходный срез, версия правил, исход каждой записи и разбор исключений. Повторяется только разрешённый шаг с теми же входами. | ADR-055 |
+| У области данных один авторитетный источник записи | Сосуществование не создаёт две независимые истины. Передача полномочий на изменение оформляется явно. | ADR-056 |
+| Выпуск модели неизменяем, испытания среды отдельны | Один отпечаток означает одно содержание. Неизвестное состояние установки не объявляется успешным возвратом к прежней модели. | ADR-057 |
+| Заказ, публикация, доставка и исполнение независимы | Принятие внешней системой не переписывает выданный состав. Повтор доставки и новое инженерное изменение различаются. | ADR-058 |
+| Мягкой конкретизации нужна позиционная область | Два места одной детали могут предпочитать разные версии. Первоначальная открытая развилка закрыта обязательным постоянным намерением. | ADR-059, завершено ADR-065 |
+| Одобрение правок и точного результата различаются | Согласованный список действий сам по себе не доказывает точный транзитивный состав. Позднее уточнены договоры сохранённого результата и проверки свежести. | ADR-060, развитие ADR-070 |
+| Доступ не подменяет выбранную версию | Закрытая подходящая версия не заменяется доступной старой. Предметная ошибка и запрет доступа остаются разными исходами. | ADR-061 |
+| Строгая точность не допускает резервной подстановки | Если точной ссылки нет, подбор завершается неуспехом. Жёсткая фиксация инженерной версии не выдаётся за точное состояние. | ADR-062, развитие ADR-063/066 |
 
-[01 — Видение и принципы](../../01-vision-and-principles.md) говорит, что каждый concrete type отображается на собственную таблицу. [ADR-004](../../12-decisions.md) допускает TPH, где несколько типов делят таблицу, а joined использует несколько таблиц по иерархии. Канонический смысл: **никакой универсальной таблицы всех экземпляров; storage mapping принадлежит конкретному типу и явно объявлен**, но отношение «один type — ровно одна уникальная table» не является общим инвариантом.
+Эти решения исправляют не косметику интерфейса, а опасные различия результата. Например, молчаливо подставленная доступная версия может дать правдоподобный, но неверный состав. Поэтому отказ иногда является единственным корректным продуктовым результатом.
 
-### KBD-C-003. Детерминированность требует больше, чем «одинаковый normalized DSL»
+## 8. Пересмотр семантического ядра
 
-Тот же [документ принципов](../../01-vision-and-principles.md) формулирует «одинаковый нормализованный DSL → побайтно одинаковый C# и SQL». Для product lock нужны как минимум exact compiler/format/CodegenVersion, module delivery manifest и deployment renderer profile; membership module намеренно не входит в normalized domain IR (ADR-053), а SQL dialect является deployment property (ADR-013). Значит, строгий reproducibility claim должен звучать как **одинаковые exact source/module lock + toolchain/artifact versions + deployment profile дают одинаковые артефакты**.
+| Решение | Что стало обязательным | Основание |
+|---|---|---|
+| Инженерная версия и её точное состояние разделены | Редактирование той же версии и создание новой версии — разные команды. Старое содержание и происхождение сохраняются. | ADR-063 |
+| Работа, чтение и выпуск имеют разные границы | Рабочая область, контекст и пакет независимы; параллельность обнаруживает конфликт при публикации, а не запрещается глобально. | ADR-064 |
+| Мягкая конкретизация долговременна | Сохранённый выбор позиции и история его активности разделены. Игнорирование, приостановка, удаление и восстановление не смешиваются. | ADR-065 |
+| Общий подбор допускает разные семантические режимы | Порядок источников задаётся явно и версионируется. Режим IPS не подменяется удобным редакторским порядком. | ADR-066 |
+| Жизненный цикл не сводится к одной шкале готовности | Шаг, права, категория продвижения, инженерная готовность и назначение основной версии различаются. | ADR-067 |
+| Общий реестр поддерживает типизированную предметную физику | Разные типы могут безопасно ссылаться на объекты, инженерные версии и состояния без универсального хранилища их свойств. | ADR-068 |
+| Эволюция модели проверяет реальное хранилище | Выпуск, установленная привязка и физическая среда различимы; неподтверждённая смесь блокируется. | ADR-069 |
+| Итерация, точное свидетельство и историческое время самостоятельны | Возврат восстанавливает рабочие данные; точное одобрение не меняется из-за посторонней новой версии; время факта и регистрации различаются. | ADR-070 |
+| Малое семантическое доказательство предшествует зависимой реализации | Старые формы не закрепляются в общем механизме записи до проверки контрпримеров новой модели. | ADR-071 |
 
-### KBD-C-004. Многошаговый named query уже решён ADR, но codegen-текст называет его open design
+**Пример цены пересмотра.** Прежний код считал любое опубликованное содержание одной инженерной версией. Теперь требуется переход к отдельным уровням. Это может потребовать изменения уже созданных форм и испытаний. Сохранение ошибочного ограничения ради совместимости раннего прототипа признано более дорогим, чем исправление на текущей стадии.
 
-В конце [07 — Кодогенерация](../../07-codegen.md) многошаговый процедурный запрос ещё назван отдельным post-PoC/open design. [ADR-045](../../12-decisions.md) позднее принял `step <name> = <algebra expression>` внутри named query и оставил compiler выбор CTE/materialization. Приоритет у ADR-045; документация codegen требует синхронизации перед реализацией G3/G4.
+## 9. Расширяемый PLM-фундамент
 
-### KBD-C-005. «Снимок заказа» в обзорном тексте не означает один Snapshot на весь жизненный цикл
+| Решение | Продуктовое обязательство и граница | Основание |
+|---|---|---|
+| PLM строится из предметных модулей поверх общего ядра | Богатство инженерных задач не требует одной универсальной таблицы или обязательного монолита. | ADR-072 |
+| Переносимый смысл не равен местному размещению | Одинаковое определение может устанавливаться в разных средах без смешения его смысла и локальных ключей. | ADR-073 |
+| Структуры самостоятельны и типизированы | Конструкторский состав, технологическое разбиение и иные структуры не обязаны быть одним деревом; адрес явно определяет свою область. | ADR-074 |
+| Точный комплект шире снимка состава | Согласование может включать документы, маршруты, нормы, таблицы и проверки, сохраняя смысл каждого участника. | ADR-075 |
+| Нужные ресурсы удерживаются до полного приложения САПР | Ссылка на файл без сохранённых байтов и проверяемой идентичности не обеспечивает точное доказательство. | ADR-076 |
+| Федерация и ограниченная выдача имеют честные границы | Внешнее наблюдение не становится локальной истиной. Разрешённая частичная выдача не называется полным исходным артефактом. | ADR-077 |
+| Расширение участвует в общем договоре операции | Дополнительный обработчик не обходит права, согласование, журнал и ограничения. Фоновое задание допускается к исполнению по явным условиям. | ADR-078 |
+| Двойник развивается на точных фактах и адаптерах | Проектное, фактическое и обслуживаемое состояние связываются; отраслевой стандарт не добавляет ложных гарантий чужим данным. | ADR-079 |
 
-[Product overview](../../../overview/README.md) в единственном числе описывает точный snapshot, на который ссылается заказ. Нормативный [09 — PLM-семантика](../../09-plm-semantics.md) и ADR-052 уточняют: Order — живой versioned domain object, а immutable `order` Snapshot создаётся **на каждую передачу**; у одного заказа может быть много snapshots. Один `SnapshotId` — частный случай, не cardinality contract.
+## 10. Нейтральная объектная модель для других областей
 
-### KBD-C-006. Общий язык «зафиксировать любой результат снимком» ограничен snapshot-safe graph
+| Решение | Продуктовое обязательство и пример | Основание |
+|---|---|---|
+| Инженерная семантика подключается по необходимости | Логистической записи не требуется фиктивная инженерная версия или литера. | ADR-080 |
+| Способ записи отделён от пользовательской версионности | Изменяемая запись защищается от потери правок, неизменяемый факт исправляется новым фактом, конструкция проходит управляемую публикацию. | ADR-081 |
+| Предметные роли и сочетания самостоятельны | «Материал основания» и «материал накладки» различаются даже при одном типе материала; матрица не сводится к составу изделия. | ADR-082 |
+| Количество имеет носитель и основание | Масса партии, количество упаковок и доля сухого вещества не смешиваются по совпадению чисел. | ADR-083 |
+| Область и полнота результата объявляются | Полная выдача, ограниченный просмотр, отрицательный ответ и приближённый результат имеют разные обещания. | ADR-084 |
+| Событие и область согласованности отличны от записи | Повтор события не создаёт новый факт из-за смены технического состояния строки; ограничение может охватывать несколько объектов. | ADR-085 |
+| Пригодность и сохранность задаются для назначения | Общая готовность материала не доказывает допуск для медицины, пищевого контакта или заданной среды; подписывается определённый смысл. | ADR-086 |
 
-Обзорные материалы справедливо объясняют Snapshot как способ сохранить результат, но нормативный [09 — PLM-семантика](../../09-plm-semantics.md) ограничивает materialization: только полный outgoing occurrence traversal `source revision → versioned target identity → exact revision`, `cycles reject`. Incoming, identity→identity, revision-target, nonversioned и mixed traversals остаются live-only до нового ADR. Это функциональная граница, а не деталь оптимизации.
+**Пример расширения без потери PLM.** Карточка насоса продолжает иметь инженерные версии. Телефон поставщика изменяется обычной разрешённой операцией. Результат испытания партии сохраняется неизменяемым фактом. Все три связаны и прослеживаемы, но не обязаны проходить одинаковое извещение.
 
-### KBD-C-007. Cookbook показывает будущие business snapshots рядом с PoC-кодом
+## 11. Агентское основание, таблицы и совместимость
 
-[13 — Query cookbook](../../13-query-cookbook.md) содержит пример `SnapshotKind.Baseline`, но текст рядом отмечает, что PoC исполняет только `Projection`. Пример — frozen target API, не свидетельство runtime-функции. Тот же принцип относится к generated signatures команд и query classes будущих фаз.
+| Решение | Продуктовое обязательство и проверка | Основание |
+|---|---|---|
+| Готовность к агентам — гарантия основания, не встроенный оркестратор | Interlink предоставляет точные данные и безопасные операции; Alvatune или другой продукт управляет циклами. | ADR-087 |
+| Показанный контекст отличается от исходников | Сохраняются фактические фрагменты, страницы, сокращения и результаты до выдачи исполнителю. Ссылка на документ не доказывает его полное прочтение. | ADR-088 |
+| Исполнитель, запуск и делегирование независимы | Агент может действовать автономно, от человека или по поручению другого агента с явными ограничениями. | ADR-089 |
+| Безопасный повтор связан с подтверждённым предметным эффектом | Обязательная квитанция и журнал не расходятся с результатом. Потеря ответа означает неизвестный исход, а не отмену. | ADR-090 |
+| Инструмент имеет определённый договор эффекта | Чтение, предложение, локальное изменение и внешний эффект не получают одинаковый режим повтора и полномочий. | ADR-091 |
+| Индексируемый набор и координатная карта имеют разные гарантии | Справочник, полная сетка и разреженное сопоставление используют общие типы, но различаются по полноте и смыслу пустоты. | ADR-092 |
+| Замены и совместимость — разные предметные договоры | Разрешение, контекстный выбор, применение и факт разделены; полный вариант N:M и многоместная совместимость проверяются целиком. | ADR-093 |
 
-## 7. Решения, которые нельзя считать закрытыми продуктово
+**Пример общей проверки.** Агент предлагает для станции заменить насос двумя меньшими. Он должен видеть удержанную редакцию характеристик, выбрать полный разрешённый комплект, проверить общую нагрузку и получить разрешение на действие. Публикация оставляет точное свидетельство и подтверждённый результат операции. Отсутствующая страница справочника не считается доказательством допустимости, а потерянный ответ не порождает второй выпуск.
 
-ADR закрывает архитектурную форму, но не подтверждает product-market semantics. До разговора о паритете IPS нужны данные по следующим пунктам:
+## 12. Что остаётся отклонённым, а что действительно пересмотрено
 
-1. Какой точный порядок resolver использует каждая целевая установка IPS: современные и исторические источники расходятся.
-2. В каких процессах fallback допустим только для диагностики, а где — для производства.
-3. Достаточен ли exclusive affected-object Changeset для реальной параллельной работы.
-4. Какие customer metadata обязаны оставаться live-editable и кто согласует promotion в DSL.
-5. Какие order/baseline artifacts должны быть полностью автономными, включая значения и файлы, а не только ссылки на immutable revisions.
-6. Как технологические структуры, маршруты, КТД, нормы и межцеховая применяемость отображаются на domain modules поверх object kernel.
-7. Как host package manager выбирает module versions и показывает conflicts/locks оператору.
-8. Какая production drift policy обязательна: block, quarantine либо warning.
+| Альтернатива | Действующая позиция |
+|---|---|
+| Произвольная универсальная карточка вместо всех типизированных данных | Отклонена как основное хранилище; тонкий реестр структурных опор разрешён |
+| Скрытый контекст окна как источник предметного результата | Отклонён; используемые условия сохраняются и передаются явно |
+| Единственный фиксированный порядок всех источников подбора | Пересмотрен; один механизм исполняет разные объявленные семантические режимы |
+| Мягкая конкретизация только как временное предпочтение пакета | Пересмотрена; требуется долговременный выбор позиции с историей активности |
+| Один пакет как работа, контекст и выпуск одновременно | Пересмотрен; границы разделены |
+| Одна рабочая копия на объект без вариантов параллельности | Пересмотрена; конфликты управляются, дополнительная эксклюзивность возможна по процедуре |
+| Автоматическое универсальное слияние инженерных составов | Не обещается; интеграция требует предметной проверки |
+| Произвольные запросы и обработчики как обходной путь изменения | Отклонены; расширение участвует в общем договоре |
+| Согласование как бессрочное разрешение любой будущей операции | Отклонено; предмет и нынешние полномочия проверяются отдельно |
+| Обрезанный правами снимок, выдаваемый за полный | Отклонён; самостоятельная ограниченная выдача имеет другой явный договор |
+| Все изменения и события обязаны иметь инженерные версии | Пересмотрено; нейтральные способы ведения данных обязательны |
+| Отсутствие строки автоматически означает запрет либо разрешение | Отклонено без полного авторитетного отношения с объявленной областью |
+| Один общий текущий вариант замены для всех заказов | Не обязателен в нативной модели; исходное поведение IPS воспроизводится отдельным профилем |
+| Полный агентский продукт как условие проверки основы | Не требуется; минимальные гарантирующие сценарии испытываются раньше |
 
-Эти пункты относятся к [12 — Допущения, риски и открытые вопросы](12-open-questions-and-risks.md); их нельзя закрывать расширительным толкованием ADR.
+## 13. Как проверять выполнение решений
 
-## 8. Правило изменения реестра
+На продуктовой приёмке нужны не все технические детали ADR, а несколько убедительных сквозных доказательств.
 
-Новое решение добавляется сюда только после одного из событий:
+Первое — исправление версии корпуса без нового номера: сохраняются рабочая история, оба опубликованных состояния и правильная принадлежность подписи. Второе — совместная модернизация с независимым выпуском механики и автоматики: общий контекст не становится общим завершением, а конфликт одной версии не теряет правки. Третье — заказная комплектная замена: точные таблицы, ограничения всего сочетания, согласование, передача и фактическая установка не смешиваются.
 
-1. принят новый ADR либо пересмотрен существующий;
-2. implementation evidence меняет только колонку статуса, не смысл решения;
-3. product discovery обнаруживает, что принятый механизм не воспроизводит обязательный IPS outcome — тогда сначала фиксируется конфликт/вопрос, а не переписывается решение задним числом;
-4. устаревшая формулировка нормативного документа синхронизирована — запись расхождения сохраняется как history note до следующего полного аудита базы.
+Отрицательные испытания не менее важны. Строгий подбор без точной ссылки должен отказать. Ручное удаление мягкого выбора не должно отменяться старым восстановлением. Недоступный файл не должен считаться удержанным. При неизвестном исходе должна находиться прежняя операция, а не запускаться новая. При конкурирующей публикации должна сохраняться работа проигравшего участника.
 
-## 9. Вывод
+Для базовых свойств хранения требуется опыт на реальной базе, а не только схема в документе. Производительность измеряется с сохранением этих гарантий, а не после отключения проверок.
 
-Главное решение Interlink — не отдельный DSL, PostgreSQL или code generator. Это связка: **compiled model, typed storage, one writer, explicit resolver и exact Snapshot при host-owned workflow/authorization**. Она сознательно сохраняет инженерные результаты IPS, но отвергает скрытый контекст, несколько языков правил и несколько путей записи. Почти все самые ценные продуктовые обещания этой связки пока находятся на уровне контрактов; PoC должен доказать их end-to-end, а не только компилируемость отдельных типов.
+## 14. Какие решения ещё требуют продуктового ответа
+
+Принятый архитектурный договор не отвечает за специалиста IPS на вопросы о конкретной установке. Нужно подтвердить приоритеты её режимов, типичные причины снятия и восстановления конкретизации, правила автопополнения контекстов, допустимость резервного результата и особенности работы с вариантными производственными заданиями.
+
+Нужно также определить сроки удержания точных файлов и таблиц, требования текущего допуска к ранее одобренному комплекту, действия при конфликте параллельных работ, полномочия агента и область обязательной миграции. Некоторые ответы могут потребовать предметного модуля или дополнительного профиля, а не изменения общего ядра.
+
+Нагрузочная архитектура, обновление без остановки и отдельные стратегии ускорения остаются предметом измерений. Отсутствие такого измерения не превращает обещание в готовую возможность. Вопросы собраны в [реестре рисков](12-open-questions-and-risks.md) и [тематическом пакете для диалога](../open-questions/README.md).
+
+## 15. Правило дальнейшего обновления
+
+Новый архитектурный смысл появляется здесь после изменения нормативного договора, а не из редакционного удобства. Свидетельство реализации меняет статус, но не подменяет исходное обязательство. Если пользовательский пример IPS опроверг принятую модель, сначала фиксируется расхождение, затем согласованно меняются решение, план, критерии и объяснение.
+
+Исторические ограничения сохраняются только как явно обозначенная история перехода. Их нельзя оставлять рядом с новым договором в качестве альтернативной действующей нормы. После каждого существенного изменения сверяются [понятия](03-core-concepts.md), [сравнение с IPS](06-ips-to-interlink-delta.md), [покрытие](13-capability-coverage.md) и [путь пользователя](16-operating-model-and-user-work.md).
+
+## Основания
+
+Нормативный журнал решений обозначен IL-ADR в [реестре источников](15-source-register.md). Основные действующие уточнения: IL-KERNEL, IL-STORAGE, IL-FOUNDATION, IL-NEUTRAL, IL-AI, IL-TD, IL-SC. Порядок проверки: IL-PLAN-V2 и IL-IPS-COVERAGE. Подробные технические договоры нужны разработчикам; данный реестр переводит их в продуктовые обязательства и не дублирует схемы хранения.

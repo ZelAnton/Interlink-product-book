@@ -1,1 +1,1 @@
-Interlink Product Book · [[Начать знакомство|Start-here]] · [[Открытые вопросы|Open-questions]] · [[Участие в диалоге|How-to-participate]]
+Продуктовая книга Interlink · [[Начать|Start-here]] · [[Обзор обновления|Foundation-update]] · [[Готовность и планы|Current-state-and-roadmap]] · [[Участие в диалоге|How-to-participate]]
