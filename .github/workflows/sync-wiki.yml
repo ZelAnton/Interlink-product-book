@@ -20,12 +20,14 @@ concurrency:
 jobs:
   sync:
     name: Sync wiki directory
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
       - name: Check out source repository
-        uses: actions/checkout@v6
+        # actions/checkout v6.1.0
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
 
@@ -33,20 +35,35 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          SOURCE_SHA: ${{ github.sha }}
           WIKI_REPOSITORY: ${{ github.repository }}.wiki.git
         run: |
           set -euo pipefail
 
-          if [[ ! -d wiki ]]; then
-            echo "::error::The wiki source directory does not exist."
+          if [[ ! -f wiki/Home.md ]]; then
+            echo "::error::The wiki source must contain wiki/Home.md."
             exit 1
           fi
 
           wiki_dir="${RUNNER_TEMP}/wiki-repository"
-          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${WIKI_REPOSITORY}"
+          wiki_url="https://github.com/${WIKI_REPOSITORY}"
+          source_sha="$(git rev-parse HEAD)"
+          auth_header="$(
+            printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 --wrap=0
+          )"
+          echo "::add-mask::${auth_header}"
+          auth_key='http.https://github.com/.extraheader'
+          git_auth=(
+            -c
+            "${auth_key}=AUTHORIZATION: basic ${auth_header}"
+          )
 
-          git clone "${wiki_url}" "${wiki_dir}"
+          git "${git_auth[@]}" clone "${wiki_url}" "${wiki_dir}"
+          wiki_branch="$(git -C "${wiki_dir}" branch --show-current)"
+          if [[ -z "${wiki_branch}" ]]; then
+            echo "::error::Wiki repository has no checked-out default branch."
+            exit 1
+          fi
+
           rsync --archive --delete --exclude='.git/' wiki/ "${wiki_dir}/"
 
           git -C "${wiki_dir}" add --all
@@ -54,12 +71,24 @@ jobs:
 
           if git -C "${wiki_dir}" diff --cached --quiet; then
             echo "GitHub Wiki is already synchronized."
-            exit 0
+          else
+            git -C "${wiki_dir}" config user.name "github-actions[bot]"
+            git -C "${wiki_dir}" config user.email \
+              "41898282+github-actions[bot]@users.noreply.github.com"
+
+            git -C "${wiki_dir}" commit -m "Sync wiki from ${source_sha}"
+            git -C "${wiki_dir}" "${git_auth[@]}" push \
+              origin "HEAD:${wiki_branch}"
           fi
 
-          git -C "${wiki_dir}" config user.name "github-actions[bot]"
-          git -C "${wiki_dir}" config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
+          local_sha="$(git -C "${wiki_dir}" rev-parse HEAD)"
+          remote_sha="$(
+            git -C "${wiki_dir}" "${git_auth[@]}" ls-remote \
+              origin "refs/heads/${wiki_branch}" | awk 'NR == 1 { print $1 }'
+          )"
+          if [[ -z "${remote_sha}" || "${local_sha}" != "${remote_sha}" ]]; then
+            echo "::error::Wiki remote SHA does not match the local commit."
+            exit 1
+          fi
 
-          git -C "${wiki_dir}" commit -m "Sync wiki from ${SOURCE_SHA}"
-          git -C "${wiki_dir}" push origin HEAD
+          echo "GitHub Wiki is synchronized at ${remote_sha}."
