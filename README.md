@@ -40,3 +40,7 @@ Interlink находится в разработке. Книга различа�
 Сейчас можно воспользоваться отдельной формой для [обязательного сценария IPS](https://github.com/ZelAnton/Interlink-product-book/issues/new?template=ips-scenario.yml) или [продуктового замечания](https://github.com/ZelAnton/Interlink-product-book/issues/new?template=product-feedback.yml). Следующий этап — диалоговый ИИ-помощник, который будет отвечать по материалам книги, помогать уточнять требования и оформлять предложения без необходимости изучать структуру репозитория.
 
 Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Уточнение модели от 7 сентября 2026 года
+
+Новые главы Wiki объясняют [общий адрес элемента](https://github.com/ZelAnton/Interlink-product-book/wiki/Elements-and-concepts), [различие инструкции, применения и выполнения](https://github.com/ZelAnton/Interlink-product-book/wiki/Instructions-and-execution) и [предметные понятия](https://github.com/ZelAnton/Interlink-product-book/wiki/Domain-concepts). Они дополняют принятую архитектуру и план проверок, а не перечень уже работающих функций.

@@ -22,6 +22,9 @@
 ### Модель и новые данные
 
 - [[Общее объектное основание|Object-foundation]]
+- [[Элементы и общий адрес|Elements-and-concepts]]
+- [[Инструкции, применения и выполнение|Instructions-and-execution]]
+- [[Понятия и классификация|Domain-concepts]]
 - [[Система типов и данных|Data-guide]]
 - [[Язык модели|Model-language]]
 - [[Расширяемость и миграция|Extensibility-and-migration]]
